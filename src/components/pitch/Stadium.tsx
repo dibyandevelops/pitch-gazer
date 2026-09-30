@@ -109,13 +109,13 @@ export function Stadium({ shadows }: { shadows: boolean }) {
         [-fx, fz],
         [fx, -fz],
         [-fx, -fz],
-      ].map(([x, z]) => (
+      ] as [number, number][]).map(([x, z]) => (
         <Floodlight key={`${x}${z}`} x={x} z={z} />
       ))}
       {[
         [fx, fz],
         [-fx, -fz],
-      ].map(([x, z], i) => (
+      ] as [number, number][]).map(([x, z], i) => (
         <spotLight
           key={i}
           position={[x * 0.9, 30, z * 0.9]}
