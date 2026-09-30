@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MatchRouteImport } from './routes/match'
+import { Route as ApiScorerPredictionsRouteImport } from './routes/api.scorer-predictions'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const MatchRoute = MatchRouteImport.update({
   path: '/match',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiScorerPredictionsRoute = ApiScorerPredictionsRouteImport.update({
+  id: '/api/scorer-predictions',
+  path: '/api/scorer-predictions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/match': typeof MatchRoute
+  '/api/scorer-predictions': typeof ApiScorerPredictionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/match': typeof MatchRoute
+  '/api/scorer-predictions': typeof ApiScorerPredictionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/match': typeof MatchRoute
+  '/api/scorer-predictions': typeof ApiScorerPredictionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/match'
+  fullPaths: '/' | '/match' | '/api/scorer-predictions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/match'
-  id: '__root__' | '/' | '/match'
+  to: '/' | '/match' | '/api/scorer-predictions'
+  id: '__root__' | '/' | '/match' | '/api/scorer-predictions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MatchRoute: typeof MatchRoute
+  ApiScorerPredictionsRoute: typeof ApiScorerPredictionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/scorer-predictions': {
+      id: '/api/scorer-predictions'
+      path: '/api/scorer-predictions'
+      fullPath: '/api/scorer-predictions'
+      preLoaderRoute: typeof ApiScorerPredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MatchRoute: MatchRoute,
+  ApiScorerPredictionsRoute: ApiScorerPredictionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

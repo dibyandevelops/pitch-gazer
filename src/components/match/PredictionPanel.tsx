@@ -1,14 +1,19 @@
 import type { Prediction, Team } from "@/types/football";
 import { TeamCrest } from "./TeamPicker";
+import type { ScorerProjection } from "@/services/apiFootballScorers.server";
 
 export function PredictionPanel({
   prediction,
   home,
   away,
+  scorers,
+  scorerStatus,
 }: {
   prediction: Prediction;
   home: Team;
   away: Team;
+  scorers: ScorerProjection[];
+  scorerStatus: "idle" | "loading" | "ready" | "not-configured" | "unavailable";
 }) {
   const outcomes = [
     { label: "HOME", value: prediction.homeWin, color: "bg-emerald-300", team: home.name },
@@ -87,6 +92,70 @@ export function PredictionPanel({
           label="FAIR ODDS · INFO ONLY"
           value={`${fairOdds(prediction.fairOdds.home)} / ${fairOdds(prediction.fairOdds.draw)} / ${fairOdds(prediction.fairOdds.away)}`}
         />
+      </div>
+
+      <div className="mt-4 rounded-xl border border-white/8 bg-white/[0.035] p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="font-mono text-[9px] tracking-[0.18em] text-primary">
+              PLAYER SCORER ESTIMATES
+            </p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Chance of scoring at least once
+            </p>
+          </div>
+          {scorerStatus === "loading" ? (
+            <span className="text-[9px] text-muted-foreground">Loading live stats…</span>
+          ) : null}
+        </div>
+        {scorers.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {scorers.map((player) => (
+              <div
+                key={`${player.teamName}-${player.playerId}`}
+                className="flex items-center gap-2"
+              >
+                {player.photoUrl ? (
+                  <img
+                    src={player.photoUrl}
+                    alt=""
+                    className="size-8 rounded-full bg-white/10 object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="size-8 rounded-full bg-white/10" aria-hidden="true" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs text-foreground">{player.name}</p>
+                  <p className="truncate text-[9px] text-muted-foreground">
+                    {player.teamName} · {player.goals} goals / {player.appearances} apps
+                  </p>
+                </div>
+                <span className="font-mono text-xs text-primary">
+                  {percent(player.anytimeProbability)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : scorerStatus === "not-configured" ? (
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+            Connect API-Football in the server environment to show real player names and
+            season-based estimates. No player data is fabricated.
+          </p>
+        ) : scorerStatus === "unavailable" ? (
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+            Real player data is temporarily unavailable for this competition or season. Try again
+            later.
+          </p>
+        ) : scorerStatus === "ready" ? (
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+            The provider has no qualifying scorer stats for these teams yet.
+          </p>
+        ) : null}
+        <p className="mt-2 text-[9px] leading-relaxed text-muted-foreground/80">
+          Estimates use current season scoring rates scaled to the team goal forecast. They are
+          uncertain and do not confirm who will start.
+        </p>
       </div>
 
       <div className="mt-4">

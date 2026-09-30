@@ -11,6 +11,14 @@ npm run dev
 
 Open the local URL printed by Vite. The home page lists upcoming fixtures. Choose a competition and open a fixture to enter the match analyst. Adjust the teams and generate a forecast to see outcome probabilities, expected goals, and attacking pressure on the pitch.
 
+### Real player scorer estimates
+
+The match forecast can optionally load real player names and current-season scoring statistics from API-Football. Create an account at [API-Football](https://www.api-football.com/), subscribe to its free plan, then copy the API key shown in your account dashboard. The free plan currently lists 100 requests per day, so repeated uncached matchups can use the quota quickly.
+
+For local development, copy `.env.example` to `.env.local` and set `API_FOOTBALL_KEY` to your key. Never prefix it with `VITE_` and never put the key in client code. For Vercel, open the project's **Settings → Environment Variables**, add `API_FOOTBALL_KEY`, mark it sensitive where available, and select Preview and Production. Redeploy after saving. `FOOTBALL_SEASON` is optional and defaults to the current UTC year; set it to the season year if the provider's active season differs.
+
+The API key is read by a server route only. When it is not configured, the forecast continues to work and the scorer section explains why live player estimates are unavailable. Scorer estimates allocate the model's team expected goals across players in proportion to their current-season goals per minute, then convert that share to an anytime-scorer probability. Early-season samples are noisy; these are uncertain estimates and do not establish who will start.
+
 Useful commands:
 
 ```sh

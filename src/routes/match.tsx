@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { ArrowLeftRight, Sparkles, Waves } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { TeamPicker } from "@/components/match/TeamPicker";
@@ -7,6 +7,8 @@ import { PredictionPanel } from "@/components/match/PredictionPanel";
 import { predictMatch } from "@/lib/prediction/engine";
 import { footballService } from "@/services/footballService";
 import { saveRecentForecast } from "@/services/forecastHistory";
+import { loadScorerForecast } from "@/services/scorerService";
+import type { ScorerProjection } from "@/services/apiFootballScorers.server";
 import { useMatchStore, type CameraFocus, type QualityLevel } from "@/store/useMatchStore";
 
 const PitchScene = lazy(() => import("@/components/pitch/PitchScene"));
@@ -66,6 +68,11 @@ function MatchPage() {
   const [loadError, setLoadError] = useState(false);
   const [predictError, setPredictError] = useState("");
   const [forecastUpdatedAt, setForecastUpdatedAt] = useState<Date | null>(null);
+  const [scorers, setScorers] = useState<ScorerProjection[]>([]);
+  const [scorerStatus, setScorerStatus] = useState<
+    "idle" | "loading" | "ready" | "not-configured" | "unavailable"
+  >("idle");
+  const scorerRequest = useRef(0);
   const home = teams.find((team) => team.id === homeId);
   const away = teams.find((team) => team.id === awayId);
   const canPredict = Boolean(home && away && home.id !== away.id && !isSimulating);
@@ -114,6 +121,20 @@ function MatchPage() {
       saveRecentForecast(home, away, nextPrediction);
       setForecastUpdatedAt(new Date());
       setFocus("overview");
+      setScorers([]);
+      setScorerStatus("loading");
+      const requestId = ++scorerRequest.current;
+      void loadScorerForecast({
+        homeName: home.name,
+        awayName: away.name,
+        competition: home.league === "Champions League" ? "Champions League" : "Premier League",
+        homeExpectedGoals: nextPrediction.expectedGoals.home,
+        awayExpectedGoals: nextPrediction.expectedGoals.away,
+      }).then((result) => {
+        if (requestId !== scorerRequest.current) return;
+        setScorers(result.players);
+        setScorerStatus(result.status);
+      });
     } catch {
       setPredictError("We couldn't create this forecast. Please try again.");
     } finally {
@@ -122,8 +143,8 @@ function MatchPage() {
   };
 
   return (
-    <main className="fixed inset-0 bg-background">
-      <div className="absolute inset-0 sm:left-[min(26.25rem,calc(100vw-1.25rem))]">
+    <main className="fixed inset-0 flex flex-col overflow-hidden bg-background sm:block">
+      <div className="relative h-[35dvh] min-h-56 max-h-[19rem] w-full shrink-0 bg-[#05070d] sm:absolute sm:inset-0 sm:left-[min(26.25rem,calc(100vw-1.25rem))] sm:h-auto sm:max-h-none">
         <Suspense
           fallback={
             <div className="grid h-full place-items-center text-muted-foreground">
@@ -155,7 +176,7 @@ function MatchPage() {
       </header>
 
       <aside
-        className="glass-panel absolute inset-x-3 top-3 bottom-[calc(env(safe-area-inset-bottom)+6rem)] z-10 flex flex-col overflow-hidden sm:inset-y-5 sm:left-5 sm:right-auto sm:w-[min(25rem,calc(100vw-2.5rem))]"
+        className="glass-panel relative z-10 -mt-4 mb-[calc(env(safe-area-inset-bottom)+4.75rem)] flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-2xl sm:absolute sm:inset-y-5 sm:left-5 sm:right-auto sm:mt-0 sm:mb-0 sm:w-[min(25rem,calc(100vw-2.5rem))]"
         aria-label="Match setup and forecast"
       >
         <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5 sm:px-4 sm:py-3">
@@ -189,15 +210,15 @@ function MatchPage() {
             MATCH FORECAST
           </span>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overscroll-contain overflow-y-auto px-4 py-4">
           <div className="mb-4">
             <p className="font-mono text-[9px] tracking-[0.24em] text-primary">MATCH FORECAST</p>
             <h1 className="mt-1 text-xl text-foreground">Explore a matchup</h1>
-            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-[10px]">
               Choose two clubs to see how their modeled attack and defense translate into win, draw,
               and loss probabilities.
             </p>
-            <p className="mt-2 text-[9px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground sm:text-[9px]">
               Club names reflect the 2026/27 competitions. Form and performance figures are
               illustrative mock inputs, not live statistics.
             </p>
@@ -239,7 +260,7 @@ function MatchPage() {
             onClick={createPrediction}
             disabled={!canPredict}
             aria-busy={isSimulating}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.2)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.2)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs"
           >
             <Sparkles size={14} />{" "}
             {isSimulating
@@ -319,6 +340,8 @@ function MatchPage() {
                 prediction={prediction}
                 home={home}
                 away={away}
+                scorers={scorers}
+                scorerStatus={scorerStatus}
               />
             </>
           ) : (
@@ -335,7 +358,7 @@ function MatchPage() {
       </aside>
 
       <nav
-        className="glass-panel absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 z-10 flex -translate-x-1/2 gap-1 p-1 text-xs sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0 sm:text-sm"
+        className="glass-panel absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 z-20 flex -translate-x-1/2 gap-0.5 p-1 text-[10px] sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0 sm:gap-1 sm:text-sm"
         aria-label="Camera views"
       >
         {FOCUS.map((f) => (
@@ -343,9 +366,13 @@ function MatchPage() {
             key={f.id}
             onClick={() => setFocus(f.id)}
             aria-pressed={focus === f.id}
-            className={`rounded-md px-4 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${focus === f.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            aria-label={f.id === "overview" ? "Fit full pitch view" : f.label}
+            className={`rounded-md px-2.5 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-4 ${focus === f.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
-            {f.id === "overview" ? "Fit pitch" : f.label}
+            <span className="sm:hidden">
+              {f.id === "overview" ? "Fit" : f.id === "home" ? "Home" : "Away"}
+            </span>
+            <span className="hidden sm:inline">{f.id === "overview" ? "Fit pitch" : f.label}</span>
           </button>
         ))}
       </nav>
