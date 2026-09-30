@@ -160,7 +160,7 @@ export const TEAMS: Team[] = [
     },
   },
   {
-    id: "san-marino-fc",
+    id: "marinero",
     name: "Marinero SC",
     shortName: "MAR",
     league: "Continental League",
