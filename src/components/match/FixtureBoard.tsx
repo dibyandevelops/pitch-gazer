@@ -154,9 +154,16 @@ export function FixtureBoard() {
                   aria-label={`Reopen forecast ${forecast.homeName} versus ${forecast.awayName}, likeliest score ${forecast.homeGoals} to ${forecast.awayGoals}`}
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-foreground">
-                      {forecast.homeShortName} <span className="text-muted-foreground">vs</span>{" "}
-                      {forecast.awayShortName}
+                    <p className="flex items-center gap-2 truncate text-xs font-medium text-foreground">
+                      {teamById.get(forecast.homeId) ? (
+                        <TeamCrest team={teamById.get(forecast.homeId)!} small />
+                      ) : null}
+                      <span className="truncate">{forecast.homeShortName}</span>
+                      <span className="text-muted-foreground">vs</span>
+                      <span className="truncate">{forecast.awayShortName}</span>
+                      {teamById.get(forecast.awayId) ? (
+                        <TeamCrest team={teamById.get(forecast.awayId)!} small />
+                      ) : null}
                     </p>
                     <p className="mt-1 font-mono text-[9px] text-muted-foreground">
                       {Math.round(forecast.homeWin * 100)}% · {Math.round(forecast.draw * 100)}% ·{" "}

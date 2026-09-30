@@ -13,7 +13,7 @@ const VIEWS: Record<
   CameraFocus,
   { pos: [number, number, number]; target: [number, number, number] }
 > = {
-  overview: { pos: [0, 120, 158], target: [-28, 0, 0] },
+  overview: { pos: [0, 130, 82], target: [0, 0, 0] },
   home: { pos: [-42, 76, 124], target: [-30, 0, 0] },
   away: { pos: [42, 76, 124], target: [30, 0, 0] },
 };
@@ -30,16 +30,17 @@ function CameraRig({ compact }: { compact: boolean }) {
     toTarget: THREE.Vector3;
   } | null>(null);
   const focus = useMatchStore((s) => s.focus);
+  const cameraResetRun = useMatchStore((s) => s.cameraResetRun);
 
   useEffect(() => {
     const instance = new OrbitControls(camera, gl.domElement);
     instance.enableDamping = true;
     instance.dampingFactor = 0.08;
     instance.enablePan = true;
-    instance.minDistance = 20;
-    instance.maxDistance = 260;
+    instance.minDistance = 95;
+    instance.maxDistance = 340;
     instance.minPolarAngle = 0.15;
-    instance.maxPolarAngle = Math.PI / 2.15;
+    instance.maxPolarAngle = 1.18;
     instance.target.set(0, 0, 0);
     instance.listenToKeyEvents(window);
     instance.update();
@@ -56,7 +57,7 @@ function CameraRig({ compact }: { compact: boolean }) {
     const view = VIEWS[focus];
     const position: [number, number, number] = compact
       ? focus === "overview"
-        ? [0, 118, 138]
+        ? [0, 92, 60]
         : [view.pos[0], 29, 44]
       : view.pos;
     const target = new THREE.Vector3(...view.target);
@@ -75,7 +76,7 @@ function CameraRig({ compact }: { compact: boolean }) {
       fromTarget: instance.target.clone(),
       toTarget: target,
     };
-  }, [camera, compact, focus]);
+  }, [camera, cameraResetRun, compact, focus]);
 
   useFrame((_, delta) => {
     const current = transition.current;
@@ -109,13 +110,33 @@ function ForecastLayers() {
     <group>
       <AttackHeatmap home={home} away={away} prediction={prediction} />
       <AttackPressureAnimation />
-      <Html position={[0, 0.8, -29]} center distanceFactor={70} zIndexRange={[2, 2]}>
-        <div className="pointer-events-none w-max rounded-lg border border-white/15 bg-slate-950/85 px-4 py-3 text-center shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-md">
-          <p className="font-mono text-[12px] font-semibold tracking-[0.2em] text-white">
-            MODEL VIEW
+      <Html position={[32, 0.7, 23]} center distanceFactor={160} zIndexRange={[2, 2]}>
+        <div className="pointer-events-none whitespace-nowrap rounded-md border border-emerald-300/30 bg-slate-950/85 px-2.5 py-1.5 text-center shadow-lg backdrop-blur-sm">
+          <p className="font-mono text-[11px] font-semibold tracking-[0.12em] text-emerald-200">
+            HOME · {home.shortName}
           </p>
-          <p className="mt-1 font-mono text-[9px] tracking-[0.16em] text-emerald-200">
-            ATTACK PRESSURE · xG PROFILE
+          <p className="mt-0.5 font-mono text-[8px] text-white/80">
+            {prediction.expectedGoals.home.toFixed(2)} xG
+          </p>
+        </div>
+      </Html>
+      <Html position={[-32, 0.7, 23]} center distanceFactor={160} zIndexRange={[2, 2]}>
+        <div className="pointer-events-none whitespace-nowrap rounded-md border border-sky-300/30 bg-slate-950/85 px-2.5 py-1.5 text-center shadow-lg backdrop-blur-sm">
+          <p className="font-mono text-[11px] font-semibold tracking-[0.12em] text-sky-200">
+            AWAY · {away.shortName}
+          </p>
+          <p className="mt-0.5 font-mono text-[8px] text-white/80">
+            {prediction.expectedGoals.away.toFixed(2)} xG
+          </p>
+        </div>
+      </Html>
+      <Html position={[0, 0.7, -31]} center distanceFactor={120} zIndexRange={[2, 2]}>
+        <div className="pointer-events-none whitespace-nowrap rounded-md border border-white/15 bg-slate-950/85 px-3 py-1.5 text-center shadow-lg backdrop-blur-sm">
+          <p className="font-mono text-[9px] font-semibold tracking-[0.12em] text-white">
+            MODEL ATTACK PRESSURE
+          </p>
+          <p className="mt-0.5 font-mono text-[9px] tracking-[0.08em] text-white/70">
+            ESTIMATED ZONES · NO PLAYER TRACKING
           </p>
         </div>
       </Html>
@@ -139,14 +160,14 @@ export default function PitchScene() {
       shadows={shadows}
       dpr={pixelRatio}
       camera={{
-        position: compact ? [0, 76, 98] : VIEWS.overview.pos,
-        fov: compact ? 46 : 38,
+        position: compact ? [0, 92, 60] : VIEWS.overview.pos,
+        fov: 48,
         near: 0.5,
         far: 600,
       }}
       gl={{ antialias: quality !== "low" && !compact, powerPreference: "high-performance" }}
       role="img"
-      aria-label="Interactive 3D forecast pitch. Colored zones show modeled attacking pressure for each club. Use the camera view buttons to choose Overview, Home focus or Away focus."
+      aria-label="Interactive full-pitch forecast view. Green and blue zones show model-estimated attacking pressure for each club, based on illustrative team profiles and expected goals, not player tracking. Use Fit pitch, Home focus or Away focus to change the view."
       fallback={
         <div
           role="status"

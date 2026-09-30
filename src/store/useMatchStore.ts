@@ -12,6 +12,7 @@ interface MatchState {
   isSimulating: boolean;
   quality: QualityLevel;
   focus: CameraFocus;
+  cameraResetRun: number;
   pressureAnimationRun: number;
   setTeams: (teams: Team[]) => void;
   setHome: (id: string | null) => void;
@@ -32,6 +33,7 @@ export const useMatchStore = create<MatchState>((set) => ({
   isSimulating: false,
   quality: "high",
   focus: "overview",
+  cameraResetRun: 0,
   pressureAnimationRun: 0,
   setTeams: (teams) => set({ teams }),
   setHome: (homeId) => set({ homeId, prediction: null, focus: "home" }),
@@ -40,7 +42,7 @@ export const useMatchStore = create<MatchState>((set) => ({
   setPrediction: (prediction) => set({ prediction }),
   setSimulating: (isSimulating) => set({ isSimulating }),
   setQuality: (quality) => set({ quality }),
-  setFocus: (focus) => set({ focus }),
+  setFocus: (focus) => set((state) => ({ focus, cameraResetRun: state.cameraResetRun + 1 })),
   animatePressure: () => set((state) => ({ pressureAnimationRun: state.pressureAnimationRun + 1 })),
 }));
 

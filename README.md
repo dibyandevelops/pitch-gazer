@@ -25,7 +25,7 @@ npm run lint        # ESLint
 - Upcoming Premier League Matchweek 6 fixtures and Champions League Matchday 2 fixtures involving Premier League clubs.
 - Searchable club selectors, with Premier League teams listed first.
 - A Poisson expected-goals model with win/draw/loss probabilities, likely scorelines, confidence, and explanatory factors.
-- A client-rendered pitch view with camera controls and distinct home/away attacking-pressure zones. Zone intensity combines illustrative attack inputs with the model's expected goals; it is an explanation layer, not a prediction of exact events.
+- A client-rendered, full-pitch tactical view with camera controls and distinct home/away attacking-pressure zones. Zone intensity combines illustrative attack inputs with the model's expected goals; it is an explanation layer, not a prediction of exact events.
 - Render-quality controls, a reduced scene on small screens, keyboard-operable controls, and reduced-motion support.
 
 ## Data and prediction limits
@@ -34,7 +34,11 @@ Club names and competition participants follow the 2026/27 season. The upcoming 
 
 Team form, attack/defense ratings, expected goals, and the sample head-to-head input are illustrative mock values. They are not current club statistics. The mock service is the only data provider today and implements `FootballDataService`, so a live data provider can replace it without moving provider logic into the UI.
 
-The 3D pitch is useful as a spatial explanation: it shows where the input profiles concentrate modeled attacking pressure and connects that picture to each side's expected goals. It does not simulate a real match or predict exact play sequences. Forecasts are probabilistic estimates, not guarantees or betting advice. Fair odds are model-implied values shown for information only.
+The 3D pitch is useful as a spatial explanation: it shows where the input profiles concentrate modeled attacking pressure and connects that picture to each side's expected goals. It does not simulate a real match or predict exact play sequences. The zones are model estimates, not observed player locations, passes, or shots. Forecasts are probabilistic estimates, not guarantees or betting advice. Fair odds are model-implied values shown for information only.
+
+## Subscription direction
+
+Treat subscriptions as a later product layer, after real data and accounts are in place. A reasonable first offer would keep fixture browsing and a small daily allowance of basic forecasts free, with a paid tier for higher forecast limits, cross-device saved analysis history, matchup comparisons, and configurable fixture alerts. Keep the core probabilities and uncertainty explanation visible to everyone. The current app uses mock inputs and stores history only in the browser, so a paywall should wait until the product has reliable licensed data, account-backed storage, and server-side usage enforcement. Pricing should follow those data and infrastructure costs rather than be guessed now.
 
 ## Project structure
 
@@ -55,6 +59,6 @@ The project uses React 19 and TanStack Start with React Three Fiber 9. The match
 ## Interaction
 
 - Drag to orbit the camera, scroll to zoom, and right-drag to pan.
-- Use Overview, Home focus, and Away focus to move the camera between views.
-- Use Low, Medium, and High to choose scene quality. Small screens automatically cap pixel density, disable shadows, and omit decorative stadium geometry.
+- Use Fit pitch, Home focus, and Away focus to move the camera between views.
+- Use Low, Medium, and High to choose scene quality. The full-pitch view omits stadium structures that compete with the forecast; small screens cap pixel density and disable shadows.
 - The pitch opens to the upcoming fixture when no matchup is selected. It moves to a broad overview after a forecast is generated so the full pressure map is visible.

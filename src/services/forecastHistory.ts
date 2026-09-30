@@ -35,7 +35,12 @@ export function getRecentForecasts(): RecentForecast[] {
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]");
     if (!Array.isArray(value)) return [];
-    return value.filter(isRecentForecast).slice(0, MAX_FORECASTS);
+    const forecasts = deduplicateForecasts(value.filter(isRecentForecast));
+    // Clean up repeated matchup entries saved by earlier versions of the app.
+    if (forecasts.length !== value.length) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(forecasts));
+    }
+    return forecasts;
   } catch {
     return [];
   }
@@ -61,13 +66,26 @@ export function saveRecentForecast(home: Team, away: Team, prediction: Predictio
     prediction,
   };
   try {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([entry, ...getRecentForecasts()].slice(0, MAX_FORECASTS)),
-    );
+    const sameMatchup = (forecast: RecentForecast) =>
+      forecast.homeId === home.id && forecast.awayId === away.id;
+    const history = [entry, ...getRecentForecasts().filter((forecast) => !sameMatchup(forecast))];
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, MAX_FORECASTS)));
   } catch {
     // Forecasting remains available when browser storage is disabled or full.
   }
+}
+
+function deduplicateForecasts(forecasts: RecentForecast[]): RecentForecast[] {
+  const seen = new Set<string>();
+  return [...forecasts]
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+    .filter((forecast) => {
+      const matchup = `${forecast.homeId}:${forecast.awayId}`;
+      if (seen.has(matchup)) return false;
+      seen.add(matchup);
+      return true;
+    })
+    .slice(0, MAX_FORECASTS);
 }
 
 function isRecentForecast(value: unknown): value is RecentForecast {

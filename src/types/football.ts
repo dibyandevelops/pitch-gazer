@@ -41,6 +41,8 @@ export interface Team {
   id: string;
   name: string;
   shortName: string;
+  /** Club crest image URL from football-data.org's public crest CDN. */
+  crestUrl?: string;
   league: string;
   /** Competitions this club is part of this season, when known. */
   competitions?: Competition[];

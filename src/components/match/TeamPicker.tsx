@@ -155,16 +155,29 @@ export function TeamPicker({ side, teams, selected, onSelect }: TeamPickerProps)
 }
 
 export function TeamCrest({ team, small = false }: { team: Team; small?: boolean }) {
+  const [imageFailed, setImageFailed] = useState(false);
   return (
     <span
       aria-hidden="true"
-      className={`grid shrink-0 place-items-center rounded-xl border border-white/20 font-mono font-bold shadow-inner ${small ? "size-8 text-[9px]" : "size-10 text-[10px]"}`}
+      className={`relative grid shrink-0 place-items-center overflow-hidden rounded-xl border border-white/20 font-mono font-bold shadow-inner ${small ? "size-8 text-[9px]" : "size-10 text-[10px]"}`}
       style={{
-        background: `linear-gradient(145deg, ${team.colors.primary}, ${team.colors.secondary})`,
-        color: team.colors.secondary,
+        background: team.crestUrl
+          ? "linear-gradient(145deg, #f8fafc, #dce5ed)"
+          : `linear-gradient(145deg, ${team.colors.primary}, ${team.colors.secondary})`,
+        color: team.crestUrl ? team.colors.primary : team.colors.secondary,
       }}
     >
-      {team.shortName.slice(0, 3)}
+      {!team.crestUrl || imageFailed ? <span>{team.shortName.slice(0, 3)}</span> : null}
+      {team.crestUrl && !imageFailed ? (
+        <img
+          src={team.crestUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 size-full object-contain p-1"
+          onError={() => setImageFailed(true)}
+        />
+      ) : null}
     </span>
   );
 }

@@ -65,6 +65,7 @@ function MatchPage() {
   } = useMatchStore();
   const [loadError, setLoadError] = useState(false);
   const [predictError, setPredictError] = useState("");
+  const [forecastUpdatedAt, setForecastUpdatedAt] = useState<Date | null>(null);
   const home = teams.find((team) => team.id === homeId);
   const away = teams.find((team) => team.id === awayId);
   const canPredict = Boolean(home && away && home.id !== away.id && !isSimulating);
@@ -111,6 +112,7 @@ function MatchPage() {
       });
       setPrediction(nextPrediction);
       saveRecentForecast(home, away, nextPrediction);
+      setForecastUpdatedAt(new Date());
       setFocus("overview");
     } catch {
       setPredictError("We couldn't create this forecast. Please try again.");
@@ -121,15 +123,17 @@ function MatchPage() {
 
   return (
     <main className="fixed inset-0 bg-background">
-      <Suspense
-        fallback={
-          <div className="grid h-full place-items-center text-muted-foreground">
-            Loading stadium…
-          </div>
-        }
-      >
-        <PitchScene />
-      </Suspense>
+      <div className="absolute inset-0 sm:left-[min(26.25rem,calc(100vw-1.25rem))]">
+        <Suspense
+          fallback={
+            <div className="grid h-full place-items-center text-muted-foreground">
+              Loading stadium…
+            </div>
+          }
+        >
+          <PitchScene />
+        </Suspense>
+      </div>
 
       <header className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden items-start justify-end p-4 sm:flex sm:p-6">
         <div
@@ -249,6 +253,21 @@ function MatchPage() {
               {predictError}
             </p>
           ) : null}
+          {forecastUpdatedAt && prediction ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="mt-2 text-center text-[9px] text-muted-foreground"
+            >
+              Recalculated{" "}
+              {forecastUpdatedAt.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+              {" · "}illustrative inputs unchanged, so results may match
+            </p>
+          ) : null}
 
           {prediction && home && away ? (
             <>
@@ -280,9 +299,9 @@ function MatchPage() {
                   {away.shortName}
                 </span>
                 <p className="w-full text-[9px] leading-relaxed text-muted-foreground">
-                  Brighter zones indicate stronger modeled attacks, shaped by each club’s profile
-                  and expected goals. This adds spatial context to the forecast; it is not a
-                  play-by-play.
+                  Zone color shows modeled attack intensity, estimated from illustrative team
+                  profiles and expected goals. It adds spatial context; it is not real player, shot,
+                  or tracking data.
                 </p>
               </div>
               <button
@@ -326,7 +345,7 @@ function MatchPage() {
             aria-pressed={focus === f.id}
             className={`rounded-md px-4 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${focus === f.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
-            {f.label}
+            {f.id === "overview" ? "Fit pitch" : f.label}
           </button>
         ))}
       </nav>

@@ -72,6 +72,21 @@ export function createPitchTexture(maxAnisotropy = 4): THREE.CanvasTexture {
     }
   }
 
+  // Subtle technical-area guides outside each touchline at the halfway line.
+  g.strokeStyle = "rgba(224,240,232,0.42)";
+  g.lineWidth = m(0.055);
+  for (const sign of [-1, 1] as const) {
+    const y = sign < 0 ? oy - m(2) : oy + Wd + m(0.5);
+    g.strokeRect(ox + L / 2 - m(5), y, m(10), m(1.5));
+    for (const offset of [-4, -2, 0, 2, 4]) {
+      const tickX = ox + L / 2 + m(offset);
+      g.beginPath();
+      g.moveTo(tickX, sign < 0 ? oy : oy + Wd);
+      g.lineTo(tickX, sign < 0 ? oy - m(0.7) : oy + Wd + m(0.7));
+      g.stroke();
+    }
+  }
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = Math.min(4, maxAnisotropy);

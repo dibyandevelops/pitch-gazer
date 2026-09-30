@@ -476,6 +476,57 @@ const CHAMPIONS_LEAGUE_CLUBS: ClubSeed[] = [
 ];
 
 const UCL_EPL_IDS = new Set(["ars", "avl", "liv", "mci", "mun"]);
+
+/** Public club-crests CDN IDs from football-data.org. Unknown clubs keep the text fallback. */
+const CREST_IDS: Record<string, string> = {
+  bou: "bournemouth",
+  ars: 57,
+  avl: 58,
+  bre: 402,
+  bha: 397,
+  che: 61,
+  cov: 1076,
+  cry: 354,
+  eve: 62,
+  ful: 63,
+  hul: 322,
+  ips: 349,
+  lee: 341,
+  liv: 64,
+  mci: 65,
+  mun: 66,
+  new: 67,
+  nfo: 351,
+  sun: 71,
+  tot: 73,
+  bru: 851,
+  bvb: 4,
+  vil: 94,
+  por: 503,
+  lil: 521,
+  bet: 90,
+  rma: 86,
+  int: 108,
+  bar: 81,
+  fey: 675,
+  stu: 10,
+  atm: 78,
+  psg: 524,
+  spo: 498,
+  gal: 610,
+  nap: 113,
+  fen: 611,
+  rom: 100,
+  psv: 674,
+  sha: 660,
+  com: "7397",
+  rbl: 721,
+  bay: 5,
+  bod: 861,
+  sla: 798,
+  len: 546,
+};
+
 const MOCK_FORM: Team["form"][] = [
   ["W", "D", "W", "L", "W"],
   ["W", "W", "D", "W", "W"],
@@ -502,6 +553,9 @@ function createTeams(seeds: ClubSeed[], competition: Competition, offset = 0): T
       id: club.id,
       name: club.name,
       shortName: club.shortName,
+      crestUrl: CREST_IDS[club.id]
+        ? `https://crests.football-data.org/${CREST_IDS[club.id]}.png`
+        : undefined,
       league: competition,
       competitions,
       colors: { primary: club.primary, secondary: club.secondary },
