@@ -66,12 +66,24 @@ export function FixtureBoard() {
               AI
             </span>
           </Link>
-          <Link
-            to="/match"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-foreground transition hover:border-primary/30 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            Open match analyst <ArrowUpRight size={14} />
-          </Link>
+          <nav className="flex items-center gap-2" aria-label="Main navigation">
+            <Link
+              to="/live"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-3 text-xs text-rose-100 transition hover:border-rose-300/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-4"
+            >
+              <span
+                className="size-2 rounded-full bg-rose-400 motion-safe:animate-pulse"
+                aria-hidden="true"
+              />
+              Live scores
+            </Link>
+            <Link
+              to="/match"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 text-xs text-foreground transition hover:border-primary/30 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-4"
+            >
+              Match analyst <ArrowUpRight size={14} />
+            </Link>
+          </nav>
         </header>
 
         <section className="relative mt-8 overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-950/50 px-5 py-7 sm:mt-12 sm:px-9 sm:py-10">
