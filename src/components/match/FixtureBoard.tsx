@@ -1,6 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, CalendarDays, ChevronRight, RadioTower } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  RadioTower,
+  Sparkles,
+} from "lucide-react";
+import { predictMatch } from "@/lib/prediction/engine";
 import { footballService } from "@/services/footballService";
 import { getRecentForecasts, type RecentForecast } from "@/services/forecastHistory";
 import { useMatchStore } from "@/store/useMatchStore";
@@ -20,6 +30,8 @@ export function FixtureBoard() {
   const [error, setError] = useState(false);
   const [timezone, setTimezone] = useState("UTC");
   const [recentForecasts, setRecentForecasts] = useState<RecentForecast[]>([]);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const { setTeams: storeTeams, setHome, setAway, setFocus, setPrediction } = useMatchStore();
 
   useEffect(() => {
@@ -51,6 +63,45 @@ export function FixtureBoard() {
 
   const teamById = new Map(teams.map((team) => [team.id, team]));
   const nextKickoff = fixtures[0]?.kickoff;
+  const featuredFixtures = useMemo(() => {
+    const now = new Date();
+    const today = dateKey(now, timezone);
+    const upcoming = fixtures.filter(
+      (fixture) => new Date(fixture.kickoff).getTime() >= now.getTime(),
+    );
+    const todayFixtures = upcoming.filter(
+      (fixture) => dateKey(new Date(fixture.kickoff), timezone) === today,
+    );
+    if (todayFixtures.length) return { fixtures: todayFixtures, isToday: true };
+    const next = upcoming[0];
+    if (!next) return { fixtures: [], isToday: false };
+    const nextDate = dateKey(new Date(next.kickoff), timezone);
+    return {
+      fixtures: upcoming.filter(
+        (fixture) => dateKey(new Date(fixture.kickoff), timezone) === nextDate,
+      ),
+      isToday: false,
+    };
+  }, [fixtures, timezone]);
+  const currentFeatured = featuredFixtures.fixtures[featuredIndex];
+  const currentHome = currentFeatured ? teamById.get(currentFeatured.homeId) : undefined;
+  const currentAway = currentFeatured ? teamById.get(currentFeatured.awayId) : undefined;
+  const featuredPrediction =
+    currentHome && currentAway ? predictMatch({ home: currentHome, away: currentAway }) : undefined;
+
+  useEffect(() => {
+    setFeaturedIndex(0);
+  }, [competition, featuredFixtures.fixtures.length]);
+
+  useEffect(() => {
+    if (paused || featuredFixtures.fixtures.length < 2) return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (media.matches) return;
+    const timer = window.setInterval(() => {
+      setFeaturedIndex((index) => (index + 1) % featuredFixtures.fixtures.length);
+    }, 7000);
+    return () => window.clearInterval(timer);
+  }, [featuredFixtures.fixtures.length, paused]);
 
   return (
     <main className="min-h-screen bg-background px-4 pb-12 pt-5 sm:px-8 sm:pt-8">
@@ -196,6 +247,141 @@ export function FixtureBoard() {
           </section>
         ) : null}
 
+        {!loading &&
+        !error &&
+        currentFeatured &&
+        currentHome &&
+        currentAway &&
+        featuredPrediction ? (
+          <section className="mt-8" aria-labelledby="today-forecast-heading">
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="flex items-center gap-2 font-mono text-[9px] tracking-[0.22em] text-primary">
+                  <Sparkles size={12} />{" "}
+                  {featuredFixtures.isToday
+                    ? "TODAY · MODEL FORECAST"
+                    : "NEXT MATCHDAY · MODEL FORECAST"}
+                </p>
+                <h2 id="today-forecast-heading" className="mt-1 text-xl text-foreground">
+                  {featuredFixtures.isToday ? "Today’s match predictions" : "Coming up next"}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="mr-1 font-mono text-[9px] text-muted-foreground">
+                  {featuredIndex + 1} / {featuredFixtures.fixtures.length}
+                </span>
+                {featuredFixtures.fixtures.length > 1 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFeaturedIndex(
+                          (i) =>
+                            (i - 1 + featuredFixtures.fixtures.length) %
+                            featuredFixtures.fixtures.length,
+                        )
+                      }
+                      className="grid size-9 place-items-center rounded-full border border-white/10 text-foreground transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Previous match forecast"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaused((value) => !value)}
+                      className="grid size-9 place-items-center rounded-full border border-white/10 text-foreground transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label={paused ? "Resume forecast carousel" : "Pause forecast carousel"}
+                    >
+                      {paused ? <Play size={14} /> : <Pause size={14} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFeaturedIndex((i) => (i + 1) % featuredFixtures.fixtures.length)
+                      }
+                      className="grid size-9 place-items-center rounded-full border border-white/10 text-foreground transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Next match forecast"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            <Link
+              to="/match"
+              onClick={() => {
+                storeTeams(teams);
+                setHome(currentHome.id);
+                setAway(currentAway.id);
+                setFocus("overview");
+                setPrediction(featuredPrediction);
+              }}
+              className="group glass-panel block overflow-hidden border-primary/15 p-4 transition hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-6"
+              aria-label={`Open forecast: ${currentHome.name} versus ${currentAway.name}. Most likely score ${featuredPrediction.mostLikely.homeGoals} to ${featuredPrediction.mostLikely.awayGoals}.`}
+              aria-roledescription="slide"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays size={12} className="text-primary" />
+                  {formatKickoff(currentFeatured.kickoff, timezone)} · {currentFeatured.round}
+                </span>
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 font-mono text-[9px] tracking-wide text-primary">
+                  {currentFeatured.competition}
+                </span>
+              </div>
+              <div className="mt-5 grid items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
+                <div className="flex items-center gap-3 sm:justify-end">
+                  <span className="text-right text-sm font-medium text-foreground sm:text-base">
+                    {currentHome.name}
+                  </span>
+                  <TeamCrest team={currentHome} />
+                </div>
+                <div className="text-center">
+                  <p className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground">
+                    LIKELIEST SCORE
+                  </p>
+                  <p className="mt-0.5 font-mono text-3xl text-primary">
+                    {featuredPrediction.mostLikely.homeGoals}
+                    <span className="px-2 text-muted-foreground">–</span>
+                    {featuredPrediction.mostLikely.awayGoals}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <TeamCrest team={currentAway} />
+                  <span className="text-sm font-medium text-foreground sm:text-base">
+                    {currentAway.name}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl border border-white/8 bg-black/15 p-3 text-center">
+                <Probability
+                  label={`${currentHome.shortName} win`}
+                  value={featuredPrediction.homeWin}
+                />
+                <Probability label="Draw" value={featuredPrediction.draw} />
+                <Probability
+                  label={`${currentAway.shortName} win`}
+                  value={featuredPrediction.awayWin}
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                <span>
+                  Confidence: {featuredPrediction.confidence} · {featuredPrediction.confidenceScore}
+                  /100
+                </span>
+                <span className="inline-flex items-center gap-1 text-primary transition group-hover:gap-2">
+                  Explore full forecast <ChevronRight size={12} />
+                </span>
+              </div>
+            </Link>
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+              Estimates use illustrative club statistics in this fixture snapshot. They are
+              uncertain and are not live-data predictions or betting advice.
+            </p>
+          </section>
+        ) : null}
+
         <section className="mt-8" aria-labelledby="fixtures-heading">
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
@@ -318,4 +504,22 @@ function formatForecastDate(iso: string) {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function dateKey(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function Probability({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <p className="font-mono text-base text-foreground sm:text-lg">{Math.round(value * 100)}%</p>
+      <p className="mt-0.5 truncate text-[9px] text-muted-foreground">{label}</p>
+    </div>
+  );
 }
