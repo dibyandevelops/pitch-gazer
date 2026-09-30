@@ -78,7 +78,7 @@ function Floodlight({ x, z }: { x: number; z: number }) {
         <cylinderGeometry args={[0.35, 0.6, h, 8]} />
         <meshStandardMaterial color="#2a3346" metalness={0.6} roughness={0.4} />
       </mesh>
-      <mesh position={[0, h, 0]} lookAt={() => new THREE.Vector3(0, 0, 0)}>
+      <mesh position={[0, h, 0]} rotation={[-0.5, Math.atan2(-x, -z), 0, "YXZ"]}>
         <boxGeometry args={[5, 3, 0.6]} />
         <meshStandardMaterial color="#e8fbff" emissive="#dff6ff" emissiveIntensity={3} toneMapped={false} />
       </mesh>
