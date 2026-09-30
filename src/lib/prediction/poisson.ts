@@ -25,7 +25,10 @@ export function scoreMatrix(lh: number, la: number, maxGoals = 10, rho = -0.08):
   for (let h = 0; h <= maxGoals; h++) {
     const row: number[] = [];
     for (let a = 0; a <= maxGoals; a++) {
-      const p = Math.max(0, poissonPmf(h, lh) * poissonPmf(a, la) * dixonColesTau(h, a, lh, la, rho));
+      const p = Math.max(
+        0,
+        poissonPmf(h, lh) * poissonPmf(a, la) * dixonColesTau(h, a, lh, la, rho),
+      );
       row.push(p);
       total += p;
     }

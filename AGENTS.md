@@ -1,15 +1,6 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+## PitchOracle AI architecture rules
 
-## PitchOracle architecture rules
+- Do not force-push or rewrite published Git history. Keep commits on the connected branch in a working state because they may sync to external project tooling.
 
 - Prediction logic lives in `src/lib/prediction/` as pure TypeScript with Vitest tests, so the model can be swapped without touching UI. Tests run with `bun run test`.
 - All football data is read through the `FootballDataService` interface in `src/services/footballService.ts` (mock impl today), so a real API can replace it in one file.

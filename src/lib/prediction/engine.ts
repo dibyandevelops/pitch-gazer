@@ -1,4 +1,11 @@
-import type { Confidence, FixtureInput, MatchResult, Prediction, Scoreline, Team } from "@/types/football";
+import type {
+  Confidence,
+  FixtureInput,
+  MatchResult,
+  Prediction,
+  Scoreline,
+  Team,
+} from "@/types/football";
 import { scoreMatrix } from "./poisson";
 
 /** Tunable model constants. */
@@ -43,7 +50,7 @@ export function expectedGoals({ home, away, headToHead, homeAdvantage }: Fixture
   lh *= 1 + formIndex(home.form) * MODEL.FORM_SWING;
   la *= 1 + formIndex(away.form) * MODEL.FORM_SWING;
   if (headToHead && lh + la > 0) {
-    const scale = 1 + ((headToHead.avgGoals / (lh + la)) - 1) * MODEL.H2H_WEIGHT;
+    const scale = 1 + (headToHead.avgGoals / (lh + la) - 1) * MODEL.H2H_WEIGHT;
     lh *= scale;
     la *= scale;
   }
@@ -56,7 +63,8 @@ export function expectedGoals({ home, away, headToHead, homeAdvantage }: Fixture
 function confidenceFrom(probs: number[]): { level: Confidence; score: number } {
   const sorted = [...probs].sort((a, b) => b - a);
   // top prob ranges ~0.34 (coin flip) .. 1; margin over 2nd adds clarity.
-  const s0 = sorted[0]!, s1 = sorted[1]!;
+  const s0 = sorted[0]!,
+    s1 = sorted[1]!;
   const score = clamp(((s0 - 1 / 3) / (2 / 3)) * 70 + (s0 - s1) * 60, 0, 100);
   const level: Confidence = s0 >= 0.6 ? "high" : s0 >= 0.45 ? "medium" : "low";
   return { level, score: Math.round(score) };
@@ -67,7 +75,12 @@ export function predictMatch(input: FixtureInput): Prediction {
   const xg = expectedGoals(input);
   const matrix = scoreMatrix(xg.home, xg.away, 10, MODEL.RHO);
 
-  let homeWin = 0, draw = 0, awayWin = 0, over25 = 0, noHome = 0, noAway = 0;
+  let homeWin = 0,
+    draw = 0,
+    awayWin = 0,
+    over25 = 0,
+    noHome = 0,
+    noAway = 0;
   const cells: Scoreline[] = [];
   matrix.forEach((row, h) =>
     row.forEach((p, a) => {
@@ -90,12 +103,22 @@ export function predictMatch(input: FixtureInput): Prediction {
   const rationale: string[] = [];
   const atkDiff = attackStrength(home) - attackStrength(away);
   if (Math.abs(atkDiff) > 0.15)
-    rationale.push(`${atkDiff > 0 ? home.name : away.name} create more chances per game (xG-weighted).`);
-  const fh = formIndex(home.form), fa = formIndex(away.form);
-  if (Math.abs(fh - fa) > 0.3) rationale.push(`${fh > fa ? home.name : away.name} arrive in noticeably better form.`);
-  rationale.push(`${home.name} get a home-advantage boost of ${Math.round(((input.homeAdvantage ?? MODEL.HOME_ADVANTAGE) - 1) * 100)}%.`);
-  if (input.headToHead) rationale.push(`Recent meetings average ${input.headToHead.avgGoals.toFixed(1)} goals, nudging the total.`);
-  if (conf.level === "low") rationale.push("The sides are closely matched, so no outcome is clearly favoured.");
+    rationale.push(
+      `${atkDiff > 0 ? home.name : away.name} create more chances per game (xG-weighted).`,
+    );
+  const fh = formIndex(home.form),
+    fa = formIndex(away.form);
+  if (Math.abs(fh - fa) > 0.3)
+    rationale.push(`${fh > fa ? home.name : away.name} arrive in noticeably better form.`);
+  rationale.push(
+    `${home.name} get a home-advantage boost of ${Math.round(((input.homeAdvantage ?? MODEL.HOME_ADVANTAGE) - 1) * 100)}%.`,
+  );
+  if (input.headToHead)
+    rationale.push(
+      `Recent meetings average ${input.headToHead.avgGoals.toFixed(1)} goals, nudging the total.`,
+    );
+  if (conf.level === "low")
+    rationale.push("The sides are closely matched, so no outcome is clearly favoured.");
 
   return {
     homeWin: round(homeWin),

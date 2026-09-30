@@ -1,6 +1,17 @@
 /** Domain types shared by the data layer, prediction engine and UI. */
 
 export type MatchResult = "W" | "D" | "L";
+export type Competition = "Premier League" | "Champions League";
+
+export interface UpcomingFixture {
+  id: string;
+  competition: Competition;
+  round: string;
+  /** Kickoff expressed in UTC so the UI can format it for the viewer. */
+  kickoff: string;
+  homeId: string;
+  awayId: string;
+}
 
 export interface TeamColors {
   /** Primary shirt colour, hex. */
@@ -31,6 +42,8 @@ export interface Team {
   name: string;
   shortName: string;
   league: string;
+  /** Competitions this club is part of this season, when known. */
+  competitions?: Competition[];
   colors: TeamColors;
   /** Most recent five results, oldest first. */
   form: MatchResult[];

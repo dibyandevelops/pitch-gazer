@@ -1,75 +1,60 @@
-# Pitch Oracle
+# PitchOracle AI
 
-ROLE
-You are a senior frontend engineer and creative technologist with deep experience in React, Three.js / React Three Fiber, data visualization, and sports analytics UIs. Build production-quality code, not demos.
+PitchOracle AI is a football match intelligence platform for the 2026/27 Premier League and Champions League. It pairs a focused fixture portal with probabilistic previews that explain the model's view of each matchup.
 
-PROJECT
-Build "PitchOracle" (working name): a 3D football match prediction web app. Users pick two teams and see an immersive 3D pitch that visualizes the predicted outcome (win / draw / loss probabilities, expected goals, likely scoreline) with cinematic, polished interactions.
-
-TECH STACK
-- React 18 + TypeScript + Vite
-- React Three Fiber + @react-three/drei for the 3D scene
-- Framer Motion for UI transitions, Zustand for state
-- Tailwind CSS for the 2D interface
-- Vitest for prediction-logic tests
-
-CORE FEATURES
-1. Team selection: searchable dual selector (home vs away) with crests, form (last 5 results), and league.
-2. 3D pitch scene:
-   - Stylized, realistic-looking pitch with line markings, floodlights, subtle stadium ambience, and orbit camera with damped controls
-   - Team-colored player markers or abstract "energy zones" showing attacking/defensive strength across pitch areas (heatmap projected on the grass)
-   - Animated ball that traces the predicted match narrative (e.g., a possession flow or shot-map) when the user hits "Simulate"
-3. Prediction engine:
-   - Model using a Poisson-based expected goals approach, with inputs: recent form, attack/defense strength, home advantage, head-to-head
-   - Output: win/draw/loss %, most likely scoreline, top 5 scorelines with probabilities, and a confidence indicator
-   - Keep the engine in a separate pure TypeScript module with unit tests, so the model can be swapped later
-4. Results panel: animated probability bars, a scoreline matrix, and a short plain-language explanation of why the model favors a side
-5. Data layer: start with a mock JSON dataset (16+ teams with realistic stats), behind a service interface so a real API (e.g., football-data.org) can be plugged in later
-
-DESIGN DIRECTION
-- Dark, cinematic "matchday night" aesthetic: deep navy/black, neon accent glow, glassmorphism panels
-- Distinctive typography (a bold display face for headings, a clean sans for data); avoid generic template looks
-- Smooth camera moves between "overview," "team A focus," and "team B focus" when the user selects a side
-- Responsive: full 3D experience on desktop, simplified lighter scene on mobile
-- Accessible: keyboard navigation, reduced-motion support, sufficient contrast, text alternatives for all probabilities
-
-PERFORMANCE
-- Target 60fps on mid-range laptops; use instancing, baked/simple lighting, lazy-loaded assets, and a quality toggle (low/med/high)
-- Dispose of geometries and materials properly
-
-HONESTY REQUIREMENT
-Predictions are probabilistic estimates, not guarantees. Show a clear, unobtrusive disclaimer, and never present outputs as certain or as betting advice.
-
-DELIVERY PROCESS
-Work in stages and stop after each for my review:
-1. Project structure, dependencies, and folder layout
-2. Prediction engine + tests
-3. Static 3D pitch scene with camera controls
-4. UI layer and team selection wired to state
-5. Prediction visualizations in 3D (heatmap, ball path, animations)
-6. Polish: responsive behavior, performance pass, accessibility, README
-
-For each stage: explain key decisions briefly, provide complete runnable code (no placeholders or "rest remains the same"), and list how to run and verify it.
-
-Before starting, ask me up to 3 clarifying questions only if something essential is missing; otherwise state your assumptions and begin with stage 1.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/db7037a1-728d-4623-a08f-438a9798594b).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Run locally
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm install
 npm run dev
 ```
+
+Open the local URL printed by Vite. The home page lists upcoming fixtures. Choose a competition and open a fixture to enter the match analyst. Adjust the teams and generate a forecast to see outcome probabilities, expected goals, and attacking pressure on the pitch.
+
+Useful commands:
+
+```sh
+npm run build       # production build
+npm run preview     # serve the production build locally
+npm run test        # prediction engine tests
+npm run lint        # ESLint
+```
+
+## What is included
+
+- Upcoming Premier League Matchweek 6 fixtures and Champions League Matchday 2 fixtures involving Premier League clubs.
+- Searchable club selectors, with Premier League teams listed first.
+- A Poisson expected-goals model with win/draw/loss probabilities, likely scorelines, confidence, and explanatory factors.
+- A client-rendered pitch view with camera controls and distinct home/away attacking-pressure zones. Zone intensity combines illustrative attack inputs with the model's expected goals; it is an explanation layer, not a prediction of exact events.
+- Render-quality controls, a reduced scene on small screens, keyboard-operable controls, and reduced-motion support.
+
+## Data and prediction limits
+
+Club names and competition participants follow the 2026/27 season. The upcoming fixture list is a local snapshot based on published schedules as of 30 September 2026; kickoff dates and times may change. Times are displayed in the viewer's local timezone.
+
+Team form, attack/defense ratings, expected goals, and the sample head-to-head input are illustrative mock values. They are not current club statistics. The mock service is the only data provider today and implements `FootballDataService`, so a live data provider can replace it without moving provider logic into the UI.
+
+The 3D pitch is useful as a spatial explanation: it shows where the input profiles concentrate modeled attacking pressure and connects that picture to each side's expected goals. It does not simulate a real match or predict exact play sequences. Forecasts are probabilistic estimates, not guarantees or betting advice. Fair odds are model-implied values shown for information only.
+
+## Project structure
+
+```text
+src/
+  components/match/   fixture board, searchable team picker, forecast panel
+  components/pitch/   React Three Fiber scene, stadium, pitch texture, forecast layers
+  data/               club inputs and upcoming fixture snapshot
+  lib/prediction/     pure TypeScript Poisson engine and Vitest tests
+  routes/              fixture home page and client-only match route
+  services/            FootballDataService interface and mock implementation
+  store/               shared Zustand match state
+  types/               football domain types and R3F JSX types
+```
+
+The project uses React 19 and TanStack Start with React Three Fiber 9. The match route is client-only because the 3D scene requires WebGL and browser APIs.
+
+## Interaction
+
+- Drag to orbit the camera, scroll to zoom, and right-drag to pan.
+- Use Overview, Home focus, and Away focus to move the camera between views.
+- Use Low, Medium, and High to choose scene quality. Small screens automatically cap pixel density, disable shadows, and omit decorative stadium geometry.
+- The pitch opens to the upcoming fixture when no matchup is selected. It moves to a broad overview after a forecast is generated so the full pressure map is visible.

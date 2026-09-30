@@ -7,10 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -37,10 +36,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -77,17 +72,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PitchOracle — 3D football match predictions" },
+      { title: "PitchOracle AI — football match intelligence" },
       {
         name: "description",
         content:
-          "Pick two teams and watch a cinematic 3D pitch visualise win, draw and loss probabilities, expected goals and the likeliest scorelines.",
+          "Explore Premier League and Champions League fixtures, then understand each statistical forecast through clear probabilities and a 3D attacking-pressure view.",
       },
-      { name: "author", content: "PitchOracle" },
-      { property: "og:title", content: "PitchOracle — 3D football match predictions" },
+      { name: "author", content: "PitchOracle AI" },
+      { property: "og:title", content: "PitchOracle AI — football match intelligence" },
       {
         property: "og:description",
-        content: "Poisson-based match forecasts visualised on an immersive 3D pitch.",
+        content: "Probabilistic football forecasts with an explorable 3D attacking-pressure view.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -103,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Archivo+Black&family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
   }),
 

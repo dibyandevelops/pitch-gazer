@@ -2,13 +2,13 @@ import * as THREE from "three";
 
 /** Real pitch size in metres; 1 world unit = 1 m. */
 export const PITCH = { length: 105, width: 68 } as const;
-const PX_PER_M = 12;
+const PX_PER_M = 8;
 
 /**
  * Draws mowing stripes and FIFA line markings into one canvas texture, so the
  * whole pitch surface is a single draw call.
  */
-export function createPitchTexture(): THREE.CanvasTexture {
+export function createPitchTexture(maxAnisotropy = 4): THREE.CanvasTexture {
   const margin = 6; // run-off around the lines
   const W = (PITCH.length + margin * 2) * PX_PER_M;
   const H = (PITCH.width + margin * 2) * PX_PER_M;
@@ -24,16 +24,6 @@ export function createPitchTexture(): THREE.CanvasTexture {
     g.fillStyle = i % 2 ? "#1f6b34" : "#23773a";
     g.fillRect(i * sw, 0, sw + 1, H);
   }
-  // subtle noise for grass grain
-  const img = g.getImageData(0, 0, W, H);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 14;
-    img.data[i]! += n;
-    img.data[i + 1]! += n;
-    img.data[i + 2]! += n;
-  }
-  g.putImageData(img, 0, 0);
-
   const m = (v: number) => v * PX_PER_M;
   const ox = m(margin);
   const oy = m(margin);
@@ -84,7 +74,7 @@ export function createPitchTexture(): THREE.CanvasTexture {
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.anisotropy = Math.min(4, maxAnisotropy);
   return tex;
 }
 

@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { PITCH, PITCH_MARGIN, createPitchTexture } from "./pitchTexture";
 
@@ -32,7 +33,13 @@ function Goal({ side }: { side: 1 | -1 }) {
       {[-w / 2, w / 2].map((z) => (
         <mesh key={z} position={[d / 2, h / 2, z]}>
           <planeGeometry args={[d, h, 6, 8]} />
-          <meshBasicMaterial color="#dfe8e4" wireframe transparent opacity={0.3} side={THREE.DoubleSide} />
+          <meshBasicMaterial
+            color="#dfe8e4"
+            wireframe
+            transparent
+            opacity={0.3}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
     </group>
@@ -62,7 +69,7 @@ function Stands() {
           {/* glowing advertising board */}
           <mesh position={[0, 0.5, -1.5]}>
             <boxGeometry args={[s.len - 12, 1, 0.2]} />
-            <meshStandardMaterial color="#0b1220" emissive="#19e6a0" emissiveIntensity={0.9} />
+            <meshStandardMaterial color="#0b1220" emissive="#19e6a0" emissiveIntensity={0.45} />
           </mesh>
         </group>
       ))}
@@ -80,16 +87,33 @@ function Floodlight({ x, z }: { x: number; z: number }) {
       </mesh>
       <mesh position={[0, h, 0]} rotation={[-0.5, Math.atan2(-x, -z), 0, "YXZ"]}>
         <boxGeometry args={[5, 3, 0.6]} />
-        <meshStandardMaterial color="#e8fbff" emissive="#dff6ff" emissiveIntensity={3} toneMapped={false} />
+        <meshStandardMaterial
+          color="#e8fbff"
+          emissive="#dff6ff"
+          emissiveIntensity={3}
+          toneMapped={false}
+        />
       </mesh>
     </group>
   );
 }
 
-export function Stadium({ shadows }: { shadows: boolean }) {
-  const texture = useMemo(() => createPitchTexture(), []);
+export function Stadium({ shadows, compact }: { shadows: boolean; compact: boolean }) {
+  const maxAnisotropy = useThree((state) => state.gl.capabilities.getMaxAnisotropy());
+  const texture = useMemo(() => createPitchTexture(maxAnisotropy), [maxAnisotropy]);
+  useEffect(() => () => texture.dispose(), [texture]);
   const fx = PITCH.length / 2 + 14;
   const fz = PITCH.width / 2 + 14;
+  const floodlights: [number, number][] = [
+    [fx, fz],
+    [-fx, fz],
+    [fx, -fz],
+    [-fx, -fz],
+  ];
+  const spotlights: [number, number][] = [
+    [fx, fz],
+    [-fx, -fz],
+  ];
   return (
     <group>
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
@@ -103,32 +127,24 @@ export function Stadium({ shadows }: { shadows: boolean }) {
       </mesh>
       <Goal side={1} />
       <Goal side={-1} />
-      <Stands />
-      {[
-        [fx, fz],
-        [-fx, fz],
-        [fx, -fz],
-        [-fx, -fz],
-      ] as [number, number][]).map(([x, z]) => (
-        <Floodlight key={`${x}${z}`} x={x} z={z} />
-      ))}
-      {[
-        [fx, fz],
-        [-fx, -fz],
-      ] as [number, number][]).map(([x, z], i) => (
-        <spotLight
-          key={i}
-          position={[x * 0.9, 30, z * 0.9]}
-          angle={0.7}
-          penumbra={0.6}
-          intensity={2200}
-          distance={140}
-          color="#eef9ff"
-          castShadow={shadows && i === 0}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-      ))}
+      {!compact ? <Stands /> : null}
+      {!compact ? floodlights.map(([x, z]) => <Floodlight key={`${x}${z}`} x={x} z={z} />) : null}
+      {!compact
+        ? spotlights.map(([x, z], i) => (
+            <spotLight
+              key={i}
+              position={[x * 0.9, 30, z * 0.9]}
+              angle={0.7}
+              penumbra={0.6}
+              intensity={2200}
+              distance={140}
+              color="#eef9ff"
+              castShadow={shadows && i === 0}
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+            />
+          ))
+        : null}
     </group>
   );
 }

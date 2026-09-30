@@ -12,6 +12,7 @@ interface MatchState {
   isSimulating: boolean;
   quality: QualityLevel;
   focus: CameraFocus;
+  pressureAnimationRun: number;
   setTeams: (teams: Team[]) => void;
   setHome: (id: string | null) => void;
   setAway: (id: string | null) => void;
@@ -20,6 +21,7 @@ interface MatchState {
   setSimulating: (v: boolean) => void;
   setQuality: (q: QualityLevel) => void;
   setFocus: (f: CameraFocus) => void;
+  animatePressure: () => void;
 }
 
 export const useMatchStore = create<MatchState>((set) => ({
@@ -30,6 +32,7 @@ export const useMatchStore = create<MatchState>((set) => ({
   isSimulating: false,
   quality: "high",
   focus: "overview",
+  pressureAnimationRun: 0,
   setTeams: (teams) => set({ teams }),
   setHome: (homeId) => set({ homeId, prediction: null, focus: "home" }),
   setAway: (awayId) => set({ awayId, prediction: null, focus: "away" }),
@@ -38,6 +41,7 @@ export const useMatchStore = create<MatchState>((set) => ({
   setSimulating: (isSimulating) => set({ isSimulating }),
   setQuality: (quality) => set({ quality }),
   setFocus: (focus) => set({ focus }),
+  animatePressure: () => set((state) => ({ pressureAnimationRun: state.pressureAnimationRun + 1 })),
 }));
 
 export const selectHomeTeam = (s: MatchState) => s.teams.find((t) => t.id === s.homeId);

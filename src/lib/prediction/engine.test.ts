@@ -18,10 +18,12 @@ describe("poisson", () => {
     expect(s).toBeCloseTo(1, 6);
   });
   it("matches known value", () => {
-    expect(poissonPmf(2, 1.5)).toBeCloseTo(0.2510, 4);
+    expect(poissonPmf(2, 1.5)).toBeCloseTo(0.251, 4);
   });
   it("matrix is normalised", () => {
-    const total = scoreMatrix(1.4, 1.1).flat().reduce((a, b) => a + b, 0);
+    const total = scoreMatrix(1.4, 1.1)
+      .flat()
+      .reduce((a, b) => a + b, 0);
     expect(total).toBeCloseTo(1, 8);
   });
 });
@@ -56,7 +58,9 @@ describe("predictMatch", () => {
   it("most likely scoreline is the top of the list, sorted desc", () => {
     expect(p.mostLikely).toEqual(p.topScorelines[0]);
     for (let i = 1; i < p.topScorelines.length; i++)
-      expect(p.topScorelines[i - 1]!.probability).toBeGreaterThanOrEqual(p.topScorelines[i]!.probability);
+      expect(p.topScorelines[i - 1]!.probability).toBeGreaterThanOrEqual(
+        p.topScorelines[i]!.probability,
+      );
   });
   it("fair odds are inverse probabilities", () => {
     expect(p.fairOdds.home).toBeCloseTo(1 / p.homeWin, 1);
@@ -71,7 +75,10 @@ describe("predictMatch", () => {
   });
   it("stronger attack raises expected goals", () => {
     const base = expectedGoals({ home, away });
-    const boosted = expectedGoals({ home: clone(home, { goalsForPerGame: 3.5, xgForPerGame: 3.5 }), away });
+    const boosted = expectedGoals({
+      home: clone(home, { goalsForPerGame: 3.5, xgForPerGame: 3.5 }),
+      away,
+    });
     expect(boosted.home).toBeGreaterThan(base.home);
   });
   it("expected goals stay within clamps", () => {
@@ -81,7 +88,8 @@ describe("predictMatch", () => {
   it("head-to-head shifts totals toward historical average", () => {
     const h = HEAD_TO_HEAD.find((x) => x.key.includes(home.id))!;
     const [a, b] = h.key.split("__") as [string, string];
-    const H = byId(a), A = byId(b);
+    const H = byId(a),
+      A = byId(b);
     const without = expectedGoals({ home: H, away: A });
     const withH = expectedGoals({ home: H, away: A, headToHead: h });
     const dirWithout = h.avgGoals - (without.home + without.away);
