@@ -95,7 +95,7 @@ function PressurePulse({
     });
   });
   return (
-    <group ref={group} position={position} rotation-x={Math.PI / 2}>
+    <group ref={group} position={position} rotation-x={-Math.PI / 2}>
       {[0, 1, 2].map((index) => (
         <mesh key={index} position-z={index * 0.025}>
           <ringGeometry args={[1.8 + index * 0.55, 1.92 + index * 0.55, 64]} />
