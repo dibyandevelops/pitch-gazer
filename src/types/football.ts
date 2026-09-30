@@ -72,6 +72,16 @@ export interface Prediction {
   mostLikely: Scoreline;
   topScorelines: Scoreline[];
   confidence: Confidence;
+  /** 0..100 — how clearly one outcome stands out. */
+  confidenceScore: number;
+  /** Probability both teams score at least once. */
+  btts: number;
+  /** Probability of 3+ total goals. */
+  over25: number;
+  /** Fair odds = 1 / probability. Informational only, not betting advice. */
+  fairOdds: { home: number; draw: number; away: number };
+  /** Full scoreline probability grid, [homeGoals][awayGoals]. */
+  matrix: number[][];
   /** Plain-language reasoning shown in the results panel. */
   rationale: string[];
 }
