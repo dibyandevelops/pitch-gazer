@@ -13,7 +13,7 @@ export function PredictionPanel({
   home: Team;
   away: Team;
   scorers: ScorerProjection[];
-  scorerStatus: "idle" | "loading" | "ready" | "not-configured" | "unavailable";
+  scorerStatus: "idle" | "loading" | "ready" | "not-configured" | "plan-limited" | "unavailable";
 }) {
   const outcomes = [
     { label: "HOME", value: prediction.homeWin, color: "bg-emerald-300", team: home.name },
@@ -141,6 +141,12 @@ export function PredictionPanel({
           <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
             Connect API-Football in the server environment to show real player names and
             season-based estimates. No player data is fabricated.
+          </p>
+        ) : scorerStatus === "plan-limited" ? (
+          <p className="mt-2 text-[10px] leading-relaxed text-amber-100/80">
+            Your API-Football plan does not include player data for this competition and season.
+            Upgrade season coverage to see current player estimates. We hide them rather than show
+            outdated players.
           </p>
         ) : scorerStatus === "unavailable" ? (
           <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">

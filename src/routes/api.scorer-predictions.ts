@@ -58,6 +58,10 @@ export const Route = createFileRoute("/api/scorer-predictions")({
           if (error instanceof Error && error.message === "SCORER_DATA_NOT_CONFIGURED") {
             return Response.json({ error: "SCORER_DATA_NOT_CONFIGURED" }, { status: 503 });
           }
+          if (error instanceof Error && error.message.startsWith("SCORER_PROVIDER_API_plan:")) {
+            console.error("Scorer provider plan does not cover requested competition or season.");
+            return Response.json({ error: "SCORER_PLAN_LIMITED" }, { status: 402 });
+          }
           console.error(
             "Scorer provider request failed:",
             error instanceof Error ? error.message : "UNKNOWN_ERROR",

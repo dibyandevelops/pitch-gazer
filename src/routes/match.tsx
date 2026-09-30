@@ -70,7 +70,7 @@ function MatchPage() {
   const [forecastUpdatedAt, setForecastUpdatedAt] = useState<Date | null>(null);
   const [scorers, setScorers] = useState<ScorerProjection[]>([]);
   const [scorerStatus, setScorerStatus] = useState<
-    "idle" | "loading" | "ready" | "not-configured" | "unavailable"
+    "idle" | "loading" | "ready" | "not-configured" | "plan-limited" | "unavailable"
   >("idle");
   const scorerRequest = useRef(0);
   const home = teams.find((team) => team.id === homeId);

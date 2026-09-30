@@ -4,6 +4,7 @@ import type { ScorerProjection } from "./apiFootballScorers.server";
 export type ScorerForecastResult =
   | { status: "ready"; players: ScorerProjection[] }
   | { status: "not-configured"; players: [] }
+  | { status: "plan-limited"; players: [] }
   | { status: "unavailable"; players: [] };
 
 export async function loadScorerForecast(input: {
@@ -23,6 +24,7 @@ export async function loadScorerForecast(input: {
   try {
     const response = await fetch(`/api/scorer-predictions?${query.toString()}`);
     if (response.status === 503) return { status: "not-configured", players: [] };
+    if (response.status === 402) return { status: "plan-limited", players: [] };
     if (!response.ok) return { status: "unavailable", players: [] };
     const result = (await response.json()) as { players?: ScorerProjection[] };
     return { status: "ready", players: result.players ?? [] };
