@@ -4,6 +4,7 @@ import type { Team } from "@/types/football";
 import { expectedGoals, formIndex, poissonPmf, predictMatch, scoreMatrix } from "./index";
 
 const byId = (id: string) => TEAMS.find((t) => t.id === id)!;
+const T = (i: number) => TEAMS[i]!;
 const clone = (t: Team, patch: Partial<Team["stats"]> = {}, id = t.id + "-x"): Team => ({
   ...t,
   id,
@@ -37,8 +38,8 @@ describe("formIndex", () => {
 });
 
 describe("predictMatch", () => {
-  const home = TEAMS[0];
-  const away = TEAMS[1];
+  const home = T(0);
+  const away = T(1);
   const p = predictMatch({ home, away });
 
   it("outcome probabilities sum to 1", () => {
@@ -55,13 +56,13 @@ describe("predictMatch", () => {
   it("most likely scoreline is the top of the list, sorted desc", () => {
     expect(p.mostLikely).toEqual(p.topScorelines[0]);
     for (let i = 1; i < p.topScorelines.length; i++)
-      expect(p.topScorelines[i - 1].probability).toBeGreaterThanOrEqual(p.topScorelines[i].probability);
+      expect(p.topScorelines[i - 1]!.probability).toBeGreaterThanOrEqual(p.topScorelines[i]!.probability);
   });
   it("fair odds are inverse probabilities", () => {
     expect(p.fairOdds.home).toBeCloseTo(1 / p.homeWin, 1);
   });
   it("home advantage favours the home side", () => {
-    const t = TEAMS[2];
+    const t = T(2);
     const mirror = clone(t);
     const r = predictMatch({ home: t, away: mirror });
     expect(r.homeWin).toBeGreaterThan(r.awayWin);
@@ -79,7 +80,7 @@ describe("predictMatch", () => {
   });
   it("head-to-head shifts totals toward historical average", () => {
     const h = HEAD_TO_HEAD.find((x) => x.key.includes(home.id))!;
-    const [a, b] = h.key.split("__");
+    const [a, b] = h.key.split("__") as [string, string];
     const H = byId(a), A = byId(b);
     const without = expectedGoals({ home: H, away: A });
     const withH = expectedGoals({ home: H, away: A, headToHead: h });

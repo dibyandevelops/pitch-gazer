@@ -56,8 +56,9 @@ export function expectedGoals({ home, away, headToHead, homeAdvantage }: Fixture
 function confidenceFrom(probs: number[]): { level: Confidence; score: number } {
   const sorted = [...probs].sort((a, b) => b - a);
   // top prob ranges ~0.34 (coin flip) .. 1; margin over 2nd adds clarity.
-  const score = clamp(((sorted[0] - 1 / 3) / (2 / 3)) * 70 + (sorted[0] - sorted[1]) * 60, 0, 100);
-  const level: Confidence = sorted[0] >= 0.6 ? "high" : sorted[0] >= 0.45 ? "medium" : "low";
+  const s0 = sorted[0]!, s1 = sorted[1]!;
+  const score = clamp(((s0 - 1 / 3) / (2 / 3)) * 70 + (s0 - s1) * 60, 0, 100);
+  const level: Confidence = s0 >= 0.6 ? "high" : s0 >= 0.45 ? "medium" : "low";
   return { level, score: Math.round(score) };
 }
 
@@ -79,7 +80,7 @@ export function predictMatch(input: FixtureInput): Prediction {
       cells.push({ homeGoals: h, awayGoals: a, probability: p });
     }),
   );
-  const btts = 1 - noHome - noAway + matrix[0][0];
+  const btts = 1 - noHome - noAway + matrix[0]![0]!;
   cells.sort((x, y) => y.probability - x.probability);
   const top = cells.slice(0, 5).map((c) => ({ ...c, probability: round(c.probability) }));
   const conf = confidenceFrom([homeWin, draw, awayWin]);
@@ -101,7 +102,7 @@ export function predictMatch(input: FixtureInput): Prediction {
     draw: round(draw),
     awayWin: round(awayWin),
     expectedGoals: { home: round(xg.home, 2), away: round(xg.away, 2) },
-    mostLikely: top[0],
+    mostLikely: top[0]!,
     topScorelines: top,
     confidence: conf.level,
     confidenceScore: conf.score,
